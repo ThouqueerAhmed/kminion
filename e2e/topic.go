@@ -14,11 +14,11 @@ import (
 // Check our end-to-end test topic and adapt accordingly if something does not match our expectations.
 // - does it exist?
 // - is it configured correctly?
-//     - does it have enough partitions?
-//     - is the replicationFactor correct?
+// - does it have enough partitions?
+// - is the replicationFactor correct?
 // - are assignments good?
-//     - is each broker leading at least one partition?
-//     - are replicas distributed correctly?
+// - is each broker leading at least one partition?
+// - are replicas distributed correctly?
 func (s *Service) validateManagementTopic(ctx context.Context) error {
 	s.logger.Debug("validating end-to-end topic...")
 

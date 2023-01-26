@@ -2,13 +2,14 @@ package prometheus
 
 import (
 	"context"
+	"math"
+	"strconv"
+
 	"github.com/cloudhut/kminion/v2/minion"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/twmb/franz-go/pkg/kerr"
 	"github.com/twmb/franz-go/pkg/kmsg"
 	"go.uber.org/zap"
-	"math"
-	"strconv"
 )
 
 type waterMark struct {
@@ -52,8 +53,11 @@ func (e *Exporter) collectConsumerGroupLagsOffsetTopic(_ context.Context, ch cha
 		offsetCommits := 0
 
 		for topicName, topic := range group {
+
 			topicLag := float64(0)
 			topicOffsetSum := float64(0)
+			offsetCommitsByTopic := 0
+
 			for partitionID, partition := range topic {
 				childLogger := e.logger.With(
 					zap.String("consumer_group", groupName),
@@ -81,6 +85,9 @@ func (e *Exporter) collectConsumerGroupLagsOffsetTopic(_ context.Context, ch cha
 				// Offset commit count for this consumer group
 				offsetCommits += partition.CommitCount
 
+				// Offset commit count for this consumer group and topic
+				offsetCommitsByTopic += partition.CommitCount
+
 				if e.minionSvc.Cfg.ConsumerGroups.Granularity == minion.ConsumerGroupGranularityTopic {
 					continue
 				}
@@ -104,6 +111,13 @@ func (e *Exporter) collectConsumerGroupLagsOffsetTopic(_ context.Context, ch cha
 				e.consumerGroupTopicOffsetSum,
 				prometheus.GaugeValue,
 				topicOffsetSum,
+				groupName,
+				topicName,
+			)
+			ch <- prometheus.MustNewConstMetric(
+				e.offsetCommitsByTopic,
+				prometheus.GaugeValue,
+				float64(offsetCommitsByTopic),
 				groupName,
 				topicName,
 			)

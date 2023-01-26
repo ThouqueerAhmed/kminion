@@ -48,6 +48,7 @@ type Exporter struct {
 	consumerGroupTopicPartitionLag       *prometheus.Desc
 	consumerGroupTopicLag                *prometheus.Desc
 	offsetCommits                        *prometheus.Desc
+	offsetCommitsByTopic                 *prometheus.Desc
 }
 
 func NewExporter(cfg Config, logger *zap.Logger, minionSvc *minion.Service) (*Exporter, error) {
@@ -205,6 +206,13 @@ func (e *Exporter) InitializeMetrics() {
 		prometheus.BuildFQName(e.cfg.Namespace, "kafka", "consumer_group_offset_commits_total"),
 		"The number of offsets committed by a group",
 		[]string{"group_id"},
+		nil,
+	)
+	// Offset commits by group id and topic
+	e.offsetCommitsByTopic = prometheus.NewDesc(
+		prometheus.BuildFQName(e.cfg.Namespace, "kafka", "consumer_group_offset_commits"),
+		"The number of offsets committed by a group",
+		[]string{"group_id", "topic_name"},
 		nil,
 	)
 
